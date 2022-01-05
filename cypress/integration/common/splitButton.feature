@@ -24,6 +24,12 @@ Feature: Split Button component
     Given I open default "Split Button Test" component with "splitButton" json from "commonComponents" using "default" object name
     When I hover mouse onto "dropdown" icon
     Then Split Button is expanded
+  
+  @positive
+  Scenario: I click Split Button component when it is used in a Form
+    Given I open default "Split Button Test" component with "splitButton" json from "commonComponents" using "in a form" object name
+    When I click "dropdown" icon
+    Then Split Button is expanded
 
   @ignore
   # there is no possibility to trigger mouseover on first element
