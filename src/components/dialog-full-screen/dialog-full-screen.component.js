@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import PropTypes from "prop-types";
 
 import Modal from "../modal";
@@ -9,8 +9,12 @@ import StyledContent from "./content.style";
 import FocusTrap from "../../__internal__/focus-trap";
 import IconButton from "../icon-button";
 import Icon from "../icon";
+import useResizeObserver from "../../hooks/__internal__/useResizeObserver";
 
 const DialogFullScreen = ({
+  "aria-describedby": ariaDescribedBy,
+  "aria-label": ariaLabel,
+  "aria-labelledby": ariaLabelledBy,
   disableAutoFocus,
   focusFirstElement,
   open,
@@ -25,10 +29,24 @@ const DialogFullScreen = ({
   onCancel,
   contentRef,
   help,
+  role = "dialog",
   ...rest
 }) => {
   const dialogRef = useRef();
   const headingRef = useRef();
+  const [headingHeight, setHeadingHeight] = useState(101);
+
+  const updateheadingHeight = () => {
+    setHeadingHeight(headingRef.current.offsetHeight);
+  };
+
+  useEffect(() => {
+    if (open && headingRef.current) {
+      updateheadingHeight();
+    }
+  }, [open]);
+
+  useResizeObserver(headingRef, updateheadingHeight, !headingRef.current);
 
   const closeIcon = () => {
     if (!showCloseIcon || !onCancel) return null;
@@ -48,6 +66,7 @@ const DialogFullScreen = ({
     <FullScreenHeading hasContent={title} ref={headingRef}>
       {typeof title === "string" ? (
         <Heading
+          data-element="dialog-title"
           title={title}
           titleId="carbon-dialog-title"
           subheader={subtitle}
@@ -81,9 +100,14 @@ const DialogFullScreen = ({
         wrapperRef={dialogRef}
       >
         <StyledDialogFullScreen
+          aria-describedby={ariaDescribedBy}
+          aria-label={ariaLabel}
+          aria-labelledby={ariaLabelledBy || "carbon-dialog-title"}
           ref={dialogRef}
           data-element="dialog-full-screen"
           pagesStyling={pagesStyling}
+          role={role}
+          aria-modal
         >
           {dialogTitle()}
           <StyledContent
@@ -91,6 +115,7 @@ const DialogFullScreen = ({
             data-element="content"
             ref={contentRef}
             disableContentPadding={disableContentPadding}
+            headingHeight={headingHeight}
           >
             {children}
           </StyledContent>
@@ -107,6 +132,19 @@ DialogFullScreen.defaultProps = {
 };
 
 DialogFullScreen.propTypes = {
+  /** Prop to specify the aria-describedby property of the DialogFullscreen component */
+  "aria-describedby": PropTypes.string,
+  /**
+   * Prop to specify the aria-label of the DialogFullscreen component.
+   * To be used only when the title prop is not defined, and the component is not labelled by any internal element.
+   */
+  "aria-label": PropTypes.string,
+  /**
+   * Prop to specify the aria-labeledby property of the DialogFullscreen component
+   * To be used when the title prop is a custom React Node,
+   * or the component is labelled by an internal element other than the title.
+   */
+  "aria-labelledby": PropTypes.string,
   /** Controls the open state of the component */
   open: PropTypes.bool.isRequired,
   /** A custom close event handler */
@@ -138,6 +176,8 @@ DialogFullScreen.propTypes = {
     PropTypes.func,
     PropTypes.shape({ current: PropTypes.instanceOf(Element) }),
   ]),
+  /** The ARIA role to be applied to the DialogFulscreen container */
+  role: PropTypes.string,
 };
 
 export default DialogFullScreen;
